@@ -1,8 +1,7 @@
-<!DOCTYPE html>
+
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Termo de Responsabilidade</title>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -49,19 +48,12 @@ button {
   color: white;
   border: none;
 }
-
-#pdf {
-  display: none;
-  padding: 20px;
-  font-family: Arial;
-  background: white;
-}
 </style>
 </head>
 
 <body>
 
-<h2>📝 TERMO DE RESPONSABILIDADE E CONSENTIMENTO</h2>
+<h2>📝 TERMO DE RESPONSABILIDADE E CONSENTIMENTO - MAQUIAGEM</h2>
 
 <form id="form">
 
@@ -82,8 +74,24 @@ button {
 
 <hr>
 
-<p><b>Saúde e Condições da Pele</b></p>
+<p><b>Saúde e Condições da Pele (Anamnese)</b></p>
+
+<p>
+Declaro que fui informado(a) sobre a necessidade de informar alergias a cosméticos (talco, conservantes, fragrâncias etc.).
+Declaro que NÃO possuo, ou informei abaixo, alergias, sensibilidades, doenças de pele ativas (acne severa, herpes, dermatite), ou uso de medicamentos fortes (ex: Roacutan).
+</p>
+
+<p><b>Campo de Observações / Alergias:</b></p>
 <textarea id="alergia"></textarea>
+
+<hr>
+
+<p><b>Responsabilidade do Cliente</b></p>
+
+<p>
+Eu <b><span id="p_assinatura"></span></b> comprometo-me a higienizar meu rosto antes do atendimento, caso solicitado pela maquiadora.
+Caso haja reação alérgica durante ou após o atendimento, a responsabilidade é isenta à profissional, desde que os produtos utilizados tenham sido acordados ou previamente testados.
+</p>
 
 <hr>
 
@@ -96,135 +104,143 @@ button {
 
 <hr>
 
-<p><b>Confirmações</b></p>
-
+<p><b>Confirmações:</b></p>
 <div class="check-group">
-  <label><input type="checkbox" class="check"> Li e concordo</label>
-  <label><input type="checkbox" class="check"> Estou ciente</label>
-  <label><input type="checkbox" class="check"> Autorizo procedimento</label>
+  <label><input type="checkbox" class="check"> Declaro que li e concordo com todas as informações</label>
+  <label><input type="checkbox" class="check"> Estou ciente das responsabilidades assumidas</label>
+  <label><input type="checkbox" class="check"> Autorizo o procedimento conforme descrito</label>
 </div>
 
 <hr>
 
-<p><b>Assinatura:</b></p>
+<p><b>Assinatura do Cliente:</b></p>
 <input type="text" id="assinatura" required>
 
 <button type="submit">Gerar Termo</button>
 
 </form>
 
-<!-- PDF -->
-<div id="pdf">
+<!-- PDF (SEM ALTERAR CLÁUSULAS) -->
+<div id="pdf" style="display:none; padding:20px; font-family:Arial;">
 
-<h2>TERMO DE RESPONSABILIDADE</h2>
+<h2 style="text-align:center;">TERMO DE RESPONSABILIDADE E CONSENTIMENTO - MAQUIAGEM</h2>
 
-<p><b>Nome:</b> <span id="p_nome"></span></p>
-<p><b>Data:</b> <span id="p_data"></span> | <b>Hora:</b> <span id="p_hora"></span></p>
+<p><b>Identificação do Cliente:</b> <span id="p_nome"></span></p>
 
-<hr>
-
-<p><b>Alergias:</b> <span id="p_alergia"></span></p>
+<p><b>Data do Atendimento:</b> <span id="p_data"></span> &nbsp;&nbsp;&nbsp;&nbsp; <b>Hora:</b> <span id="p_hora"></span></p>
 
 <hr>
 
-<p><b>Responsabilidade</b></p>
-<p>Eu <b><span id="p_assinatura"></span></b> declaro estar ciente.</p>
+<p><b>Saúde e Condições da Pele (Anamnese)</b></p>
+
+<p>
+Declaro que fui informado(a) sobre a necessidade de informar alergias a cosméticos (talco, conservantes, fragrâncias etc.).
+Declaro que NÃO possuo, ou informei abaixo, alergias, sensibilidades, doenças de pele ativas (acne severa, herpes, dermatite), ou uso de medicamentos fortes (ex: Roacutan).
+</p>
+
+<p><b>Campo de Observações / Alergias:</b></p>
+<p id="p_alergia"></p>
 
 <hr>
 
-<p id="p_imagem_texto"></p>
+<p><b>Responsabilidade do Cliente</b></p>
+
+<p>
+Eu <b><span id="p_assinatura_pdf"></span></b> comprometo-me a higienizar meu rosto antes do atendimento, caso solicitado pela maquiadora.
+Caso haja reação alérgica durante ou após o atendimento, a responsabilidade é isenta à profissional, desde que os produtos utilizados tenham sido acordados ou previamente testados.
+</p>
 
 <hr>
 
+<p><b>Consentimento de Imagem</b></p>
+
+<p>
+(<span id="p_imagem"></span>) Autorizo o uso de fotos e vídeos do resultado da maquiagem para fins de portfólio em redes sociais.
+</p>
+
+<hr>
+
+<p><b>Confirmações:</b></p>
 <ul id="p_checks"></ul>
 
 </div>
 
 <script>
+let pdfBlob = null;
+
 document.getElementById("form").addEventListener("submit", async function(e){
 e.preventDefault();
 
-const nome = document.getElementById("nome").value.trim();
+const nome = document.getElementById("nome").value;
 const data = document.getElementById("data").value;
 const hora = document.getElementById("hora").value;
-const assinatura = document.getElementById("assinatura").value.trim();
-const alergia = document.getElementById("alergia").value.trim();
+const assinatura = document.getElementById("assinatura").value;
+const alergia = document.getElementById("alergia").value;
 
 const imagem = document.querySelector('input[name="imagem"]:checked');
 const checks = document.querySelectorAll(".check");
 
-if(!nome || !data || !hora || !assinatura){
-alert("Preencha todos os campos");
-return;
+if (!nome || !data || !hora || !assinatura) {
+  alert("Preencha todos os campos.");
+  return;
 }
 
-if(!imagem){
-alert("Selecione imagem");
-return;
+if (!imagem) {
+  alert("Selecione autorização de imagem.");
+  return;
 }
 
 let ok = true;
 checks.forEach(c => { if (!c.checked) ok = false; });
 
-if(!ok){
-alert("Marque confirmações");
-return;
+if (!ok) {
+  alert("Confirme todas as informações.");
+  return;
 }
 
-/* preencher PDF */
+// preencher PDF
 document.getElementById("p_nome").innerText = nome;
 document.getElementById("p_data").innerText = data;
 document.getElementById("p_hora").innerText = hora;
 document.getElementById("p_alergia").innerText = alergia || "Nenhuma";
+document.getElementById("p_imagem").innerText = imagem.value;
+document.getElementById("p_assinatura_pdf").innerText = assinatura;
 document.getElementById("p_assinatura").innerText = assinatura;
 
-document.getElementById("p_imagem_texto").innerText =
-imagem.value === "Autoriza"
-? "AUTORIZA uso de imagem"
-: "NÃO AUTORIZA uso de imagem";
-
-/* lista checks */
 const lista = document.getElementById("p_checks");
 lista.innerHTML = "";
+
 checks.forEach(c => {
-const li = document.createElement("li");
-li.innerText = c.parentElement.innerText.trim();
-lista.appendChild(li);
+  const li = document.createElement("li");
+  li.innerText = c.parentElement.innerText.trim();
+  lista.appendChild(li);
 });
 
-/* 🔥 FIX REAL DO PROBLEMA (ESSENCIAL) */
 const element = document.getElementById("pdf");
-
 element.style.display = "block";
 
-/* força renderização antes do capture */
-await document.fonts.ready;
-await new Promise(r => setTimeout(r, 500));
+const worker = html2pdf().from(element).toPdf();
 
-const opt = {
-margin: 10,
-filename: "termo.pdf",
-image: { type: "jpeg", quality: 1 },
-html2canvas: {
-scale: 2,
-backgroundColor: "#fff"
-},
-jsPDF: {
-unit: "mm",
-format: "a4",
-orientation: "portrait"
-}
-};
+pdfBlob = await worker.outputPdf("blob");
 
-try {
-await html2pdf().set(opt).from(element).save();
-} catch (err) {
-console.error(err);
-alert("Erro ao gerar PDF. Tente Chrome atualizado.");
-}
+await worker.save();
 
-/* esconder novamente */
 element.style.display = "none";
+
+/* 🔥 AQUI ESTÁ A MUDANÇA: abre compartilhamento automático */
+const file = new File([pdfBlob], "termo.pdf", { type: "application/pdf" });
+
+const mensagem = "Segue o termo de responsabilidade assinado.";
+
+if (navigator.canShare && navigator.canShare({ files: [file] })) {
+  await navigator.share({
+    title: "Termo de Responsabilidade",
+    text: mensagem,
+    files: [file]
+  });
+} else {
+  alert("Seu dispositivo não suporta envio direto. Baixe o PDF manualmente.");
+}
 
 });
 </script>
