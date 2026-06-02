@@ -19,11 +19,12 @@ color:#000;
 h2{text-align:center;}
 
 input,textarea{
+width:100%;
 border:none;
 border-bottom:1px solid #000;
-width:100%;
 margin-top:5px;
-padding:5px;
+padding:6px;
+box-sizing:border-box;
 }
 
 textarea{height:60px;}
@@ -45,24 +46,24 @@ border:none;
 cursor:pointer;
 }
 
-/* PDF invisível mas renderizado */
+button:hover{opacity:.9;}
+
+/* PDF escondido de forma segura */
 #pdf{
 position:fixed;
+left:-2000px;
 top:0;
-left:0;
 width:700px;
-padding:20px;
 background:#fff;
-opacity:0;
-pointer-events:none;
-z-index:-1;
+padding:20px;
+font-family:Arial;
 }
 </style>
 </head>
 
 <body>
 
-<h2>📝 TERMO DE RESPONSABILIDADE E CONSENTIMENTO</h2>
+<h2>📝 TERMO DE RESPONSABILIDADE</h2>
 
 <form id="form">
 
@@ -83,13 +84,12 @@ z-index:-1;
 
 <hr>
 
-<p><b>Observações / Alergias</b></p>
+<p><b>Alergias</b></p>
 <textarea id="alergia"></textarea>
 
 <hr>
 
 <p><b>Consentimento de Imagem</b></p>
-
 <div class="radio-group">
 <label><input type="radio" name="imagem" value="Autoriza"> Autoriza</label>
 <label><input type="radio" name="imagem" value="Não autoriza"> Não autoriza</label>
@@ -98,7 +98,6 @@ z-index:-1;
 <hr>
 
 <p><b>Confirmações</b></p>
-
 <div class="check-group">
 <label><input type="checkbox" class="check"> Li e concordo</label>
 <label><input type="checkbox" class="check"> Estou ciente</label>
@@ -129,9 +128,7 @@ z-index:-1;
 <hr>
 
 <p><b>Responsabilidade</b></p>
-<p>
-Eu <b><span id="p_assinatura"></span></b> declaro estar ciente e concordo com o procedimento.
-</p>
+<p>Eu <b><span id="p_assinatura"></span></b> declaro estar ciente e concordo com o procedimento.</p>
 
 <hr>
 
@@ -144,9 +141,7 @@ Eu <b><span id="p_assinatura"></span></b> declaro estar ciente e concordo com o 
 </div>
 
 <script>
-let pdfBlob = null;
-
-document.getElementById("form").addEventListener("submit", async (e)=>{
+document.getElementById("form").addEventListener("submit", async function(e){
 e.preventDefault();
 
 const nome=document.getElementById("nome").value.trim();
@@ -159,19 +154,19 @@ const imagem=document.querySelector('input[name="imagem"]:checked');
 const checks=document.querySelectorAll(".check");
 
 if(!nome||!data||!hora||!assinatura){
-alert("Preencha todos os campos");
+alert("Preencha tudo");
 return;
 }
 
 if(!imagem){
-alert("Selecione autorização de imagem");
+alert("Selecione imagem");
 return;
 }
 
 let ok=true;
 checks.forEach(c=>{if(!c.checked)ok=false;});
 if(!ok){
-alert("Marque todas as confirmações");
+alert("Marque confirmações");
 return;
 }
 
@@ -182,11 +177,10 @@ document.getElementById("p_hora").innerText=hora;
 document.getElementById("p_alergia").innerText=alergia||"Nenhuma";
 document.getElementById("p_assinatura").innerText=assinatura;
 
-/* imagem */
 document.getElementById("p_imagem_texto").innerText =
 imagem.value==="Autoriza"
-?"AUTORIZA uso de imagem."
-:"NÃO AUTORIZA uso de imagem.";
+?"AUTORIZA uso de imagem"
+:"NÃO AUTORIZA uso de imagem";
 
 /* checks */
 const lista=document.getElementById("p_checks");
@@ -197,21 +191,19 @@ li.innerText=c.parentElement.innerText.trim();
 lista.appendChild(li);
 });
 
-/* FORÇAR RENDERIZAÇÃO */
-await document.fonts.ready;
-await new Promise(requestAnimationFrame);
-await new Promise(requestAnimationFrame);
+/* FORÇAR RENDER */
+await new Promise(r=>setTimeout(r,300));
 
 const element=document.getElementById("pdf");
 
+/* CONFIG PDF */
 const opt={
 margin:10,
 filename:"termo.pdf",
 image:{type:"jpeg",quality:1},
 html2canvas:{
-scale:3,
-backgroundColor:"#fff",
-useCORS:true
+scale:2,
+backgroundColor:"#ffffff"
 },
 jsPDF:{
 unit:"mm",
@@ -222,17 +214,11 @@ orientation:"portrait"
 
 try{
 
-const worker=html2pdf().set(opt).from(element);
-
-const pdf=await worker.toPdf().get("pdf");
-
-await worker.save();
-
-pdfBlob=pdf.output("blob");
+await html2pdf().set(opt).from(element).save();
 
 }catch(err){
 console.error(err);
-alert("Erro ao gerar PDF. Tente Chrome atualizado.");
+alert("Erro ao gerar PDF. Tente outro navegador (Chrome).");
 }
 
 });
