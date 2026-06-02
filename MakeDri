@@ -32,7 +32,7 @@ textarea{height:60px;}
 .row{display:flex;gap:20px;}
 .row div{flex:1;}
 
-.radio-group{display:flex;gap:20px;margin-top:10px;}
+.radio-group{display:flex;gap:15px;margin-top:10px;}
 
 .check-group label{display:block;margin-top:8px;}
 
@@ -43,19 +43,17 @@ width:100%;
 background:#000;
 color:#fff;
 border:none;
+font-size:16px;
 cursor:pointer;
 }
 
-button:hover{opacity:.9;}
-
-/* PDF escondido de forma segura */
 #pdf{
 position:fixed;
 left:-2000px;
 top:0;
 width:700px;
-background:#fff;
 padding:20px;
+background:#fff;
 font-family:Arial;
 }
 </style>
@@ -111,6 +109,123 @@ font-family:Arial;
 
 <button type="submit">Gerar Termo</button>
 
+</form>
+
+<!-- PDF -->
+<div id="pdf">
+
+<h2>TERMO DE RESPONSABILIDADE</h2>
+
+<p><b>Nome:</b> <span id="p_nome"></span></p>
+<p><b>Data:</b> <span id="p_data"></span> | <b>Hora:</b> <span id="p_hora"></span></p>
+
+<hr>
+
+<p><b>Alergias:</b> <span id="p_alergia"></span></p>
+
+<hr>
+
+<p><b>Responsabilidade</b></p>
+<p>Eu <b><span id="p_assinatura"></span></b> declaro estar ciente e concordo com o procedimento.</p>
+
+<hr>
+
+<p id="p_imagem_texto"></p>
+
+<hr>
+
+<ul id="p_checks"></ul>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+document.getElementById("form").addEventListener("submit", async (e) => {
+e.preventDefault();
+
+const nome = document.getElementById("nome").value.trim();
+const data = document.getElementById("data").value;
+const hora = document.getElementById("hora").value;
+const assinatura = document.getElementById("assinatura").value.trim();
+const alergia = document.getElementById("alergia").value.trim();
+
+const imagem = document.querySelector('input[name="imagem"]:checked');
+const checks = document.querySelectorAll(".check");
+
+if (!nome || !data || !hora || !assinatura) {
+alert("Preencha todos os campos");
+return;
+}
+
+if (!imagem) {
+alert("Selecione autorização de imagem");
+return;
+}
+
+let ok = true;
+checks.forEach(c => { if (!c.checked) ok = false; });
+
+if (!ok) {
+alert("Marque todas as confirmações");
+return;
+}
+
+/* preencher PDF */
+document.getElementById("p_nome").innerText = nome;
+document.getElementById("p_data").innerText = data;
+document.getElementById("p_hora").innerText = hora;
+document.getElementById("p_alergia").innerText = alergia || "Nenhuma";
+document.getElementById("p_assinatura").innerText = assinatura;
+
+document.getElementById("p_imagem_texto").innerText =
+imagem.value === "Autoriza"
+? "AUTORIZA uso de imagem"
+: "NÃO AUTORIZA uso de imagem";
+
+/* checks */
+const lista = document.getElementById("p_checks");
+lista.innerHTML = "";
+checks.forEach(c => {
+const li = document.createElement("li");
+li.innerText = c.parentElement.innerText.trim();
+lista.appendChild(li);
+});
+
+/* FORÇA RENDERIZAÇÃO REAL */
+await new Promise(r => setTimeout(r, 500));
+
+const element = document.getElementById("pdf");
+
+const opt = {
+margin: 10,
+filename: "termo.pdf",
+image: { type: "jpeg", quality: 1 },
+html2canvas: {
+scale: 2,
+backgroundColor: "#ffffff"
+},
+jsPDF: {
+unit: "mm",
+format: "a4",
+orientation: "portrait"
+}
+};
+
+try {
+await html2pdf().set(opt).from(element).save();
+} catch (err) {
+console.error(err);
+alert("Erro ao gerar PDF. Use Chrome atualizado.");
+}
+
+});
+
+});
+</script>
+
+</body>
+</html>
 </form>
 
 <!-- PDF -->
